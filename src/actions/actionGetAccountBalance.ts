@@ -101,7 +101,7 @@ export const actionGetAccountBalance: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the balance for wallet 0x1234567890123456789012345678901234567890 on eth",
         },

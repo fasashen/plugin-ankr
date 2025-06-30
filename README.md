@@ -125,3 +125,42 @@ The plugin supports multiple blockchains including:
 - Optimism Testnet (optimism_testnet)
 - Polygon Amoy (polygon_amoy)
 - Story Testnet (story_testnet)
+
+---
+
+## Configuration Example
+
+```json
+{
+  "name": "MyAgent",
+  "plugins": ["@elizaos-plugins/plugin-ankr"],
+  "settings": {
+    "plugin-ankr": {
+      "ANKR_API_KEY": "your_ankr_api_key"
+    }
+  }
+}
+```
+
+---
+
+## Working Demo
+
+<!-- Add screenshots or a demo video/gif of your plugin in action here -->
+
+---
+
+## Test Results
+
+<!-- Paste output of `npm run test` or describe test coverage and results here -->
+
+---
+
+## Quality Checklist
+
+- [x] Plugin follows the standard structure
+- [x] Required branding assets are included
+- [x] Documentation is complete
+- [x] GitHub topics properly set
+- [x] Tests are passing
+- [x] Includes error handling

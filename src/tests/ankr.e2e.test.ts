@@ -3,28 +3,34 @@ import {
   Character,
   Content,
   Memory,
-  ModelProviderName,
+  ModelType,
+  Plugin,
+  IAgentRuntime,
 } from "@elizaos/core";
 
+import { config } from "dotenv";
+config(); // Load environment variables from .env file
+
+import { google } from "@ai-sdk/google";
+import { generateText } from "ai";
 import { randomUUID } from "crypto";
 import { describe, expect, it } from "vitest";
-import actionGetAccountBalance from "../actions/actionGetAccountBalance";
-import actionGetBlockchainStats from "../actions/actionGetBlockchainStats";
-import actionGetCurrencies from "../actions/actionGetCurrencies";
-import actionGetInteractions from "../actions/actionGetInteractions";
-import actionGetNFTHolders from "../actions/actionGetNFTHolders";
-import actionGetNFTMetadata from "../actions/actionGetNFTMetadata";
-import actionGetNFTsByOwner from "../actions/actionGetNFTsByOwner";
-import actionGetNFTTransfers from "../actions/actionGetNFTTransfers";
-import actionGetTokenHolders from "../actions/actionGetTokenHolders";
-import actionGetTokenHoldersCount from "../actions/actionGetTokenHoldersCount";
-import actionGetTokenPrice from "../actions/actionGetTokenPrice";
-import actionGetTokenTransfers from "../actions/actionGetTokenTransfers";
-import actionGetTransactionsByAddress from "../actions/actionGetTransactionsByAddress";
-import actionGetTransactionsByHash from "../actions/actionGetTransactionsByHash";
+import { actionGetAccountBalance } from "../actions/actionGetAccountBalance";
+import { actionGetBlockchainStats } from "../actions/actionGetBlockchainStats";
+import { actionGetCurrencies } from "../actions/actionGetCurrencies";
+import { actionGetInteractions } from "../actions/actionGetInteractions";
+import { actionGetNFTHolders } from "../actions/actionGetNFTHolders";
+import { actionGetNFTMetadata } from "../actions/actionGetNFTMetadata";
+import { actionGetNFTsByOwner } from "../actions/actionGetNFTsByOwner";
+import { actionGetNFTTransfers } from "../actions/actionGetNFTTransfers";
+import { actionGetTokenHolders } from "../actions/actionGetTokenHolders";
+import { actionGetTokenHoldersCount } from "../actions/actionGetTokenHoldersCount";
+import { actionGetTokenPrice } from "../actions/actionGetTokenPrice";
+import { actionGetTokenTransfers } from "../actions/actionGetTokenTransfers";
+import { actionGetTransactionsByAddress } from "../actions/actionGetTransactionsByAddress";
+import { actionGetTransactionsByHash } from "../actions/actionGetTransactionsByHash";
 import { createMockDatabaseAdapter } from "./mockDatabaseAdapter";
 
-const modelProvider = ModelProviderName.GOOGLE;
 const token = process.env.GOOGLE_API_KEY;
 
 // Verify required environment variables are set
@@ -41,7 +47,6 @@ const character: Character = {
   name: "Eliza",
   username: "eliza",
   plugins: [],
-  modelProvider: modelProvider,
   settings: {
     secrets: {
       ANKR_API_KEY: ankrApiKey,
@@ -50,7 +55,6 @@ const character: Character = {
   },
   system: "",
   bio: [],
-  lore: [],
   messageExamples: [],
   postExamples: [],
   topics: [],
@@ -60,7 +64,38 @@ const character: Character = {
     post: [],
   },
   adjectives: [],
-  extends: [],
+};
+
+// Gemini Plugin Implementation
+export const geminiPlugin: Plugin = {
+  name: "gemini",
+  description: "Gemini model provider plugin for ElizaOS",
+  models: {
+    [ModelType.OBJECT_SMALL]: async (runtime: IAgentRuntime, params: any) => {
+      const modelName = "gemini-1.5-flash-latest";
+      const apiKey =
+        process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || runtime.getSetting("GOOGLE_API_KEY");
+      if (!apiKey)
+        throw new Error("GOOGLE_API_KEY is required for Gemini model");
+      const model = google(modelName);
+      const { text } = await generateText({
+        model,
+        prompt: params.prompt,
+        temperature: params.temperature || 0.2, // lower temp for structure
+        maxTokens: params.maxTokens || 2048,
+      });
+      // Try to extract JSON from markdown block or plain output
+      const match = text.match(/```json\s*([\s\S]*?)```/i);
+      const jsonString = match ? match[1] : text;
+      try {
+        return JSON.parse(jsonString);
+      } catch (err) {
+        throw new Error(
+          `Failed to parse Gemini OBJECT_SMALL output as JSON. Output was: ${text}`
+        );
+      }
+    },
+  },
 };
 
 // Helper function to create a runtime with a message
@@ -69,19 +104,26 @@ const createRuntimeWithMessage = (messageText: string) => {
     content: {
       text: messageText,
     },
-    userId: randomUUID(),
+    entityId: randomUUID(),
     agentId: randomUUID(),
     roomId: randomUUID(),
   };
 
   const runtime = new AgentRuntime({
-    token,
-    modelProvider,
     character,
-    databaseAdapter: createMockDatabaseAdapter({
+    adapter: createMockDatabaseAdapter({
       recentMessages: [message],
     }),
+    plugins: [geminiPlugin],
   });
+
+  // Manually register the OBJECT_SMALL model handler
+  runtime.registerModel(
+    ModelType.OBJECT_SMALL,
+    geminiPlugin.models[ModelType.OBJECT_SMALL],
+    "gemini",
+    1
+  );
 
   return { runtime, message };
 };

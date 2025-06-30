@@ -1,16 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
-import { Action, IAgentRuntime, Memory, ActionExample } from "@elizaos/core";
 import {
   AnkrProvider,
   Blockchain,
   GetNFTHoldersReply,
 } from "@ankr.com/ankr.js";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 // ------------------------------------------------------------------------------------------------
 // Types and Schemas
@@ -104,11 +104,11 @@ export const actionGetNFTHolders: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me holders of NFT contract 0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258 on bsc",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

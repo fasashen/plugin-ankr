@@ -1,21 +1,19 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
+import { AnkrProvider } from "@ankr.com/ankr.js";
 import {
-  composeContext,
   elizaLogger,
-  generateObject,
   HandlerCallback,
   IAgentRuntime,
   Memory,
-  ModelClass,
+  ModelType,
   State,
 } from "@elizaos/core";
-import { AnkrProvider } from "@ankr.com/ankr.js";
 import { z } from "zod";
 import { validateAnkrConfig } from "../environment";
 import { APIError, ConfigurationError, ValidationError } from "../error/base";
-import { blockchains, blockchainInfoMap } from "./blockchains";
+import { blockchainInfoMap } from "./blockchains";
 
 // ------------------------------------------------------------------------------------------------
 // Generic Handler Factory
@@ -94,7 +92,7 @@ export function createAnkrHandler<TRequest, TResponse>({
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options: { [key: string]: unknown } = {},
+    options?: any,
     callback?: HandlerCallback
   ): Promise<boolean> => {
     elizaLogger.info(`[${methodName}] executing`);
@@ -117,30 +115,86 @@ export function createAnkrHandler<TRequest, TResponse>({
 
       if (!state) {
         state = (await runtime.composeState(message)) as State;
-      } else {
-        state = await runtime.updateRecentMessageState(state);
       }
 
-      // Generate the template based on the schema
-      const template = createStandardTemplate(schema);
+      const recentMessages =
+        (await runtime.getMemories({
+          tableName: "messages",
+          roomId: message.roomId,
+          count: 10,
+        })) || [];
 
-      const context = composeContext({
-        state,
-        template,
-      });
+      // Build the prompt string
+      const prompt = createStandardTemplate(schema).replace(
+        "{{recentMessages}}",
+        [...recentMessages, message].map((m) => m.content.text || JSON.stringify(m.content)).join("\n")
+      );
 
-      elizaLogger.debug(`[${methodName}] composed context`, {
-        context,
-      });
+      const params = {
+        prompt: prompt,
+        schema: schema,
+        messages: [],
+        system:
+          "You are a helpful assistant that extracts information from messages according to a schema.",
+      };
+      console.log("params", params);
+      const modelOutput = await runtime.useModel(
+        ModelType.OBJECT_SMALL,
+        params
+      );
+      
+      elizaLogger.debug(`[${methodName}] model output:`, { modelOutput });
+      
+      // Apply defaults if the model didn't extract certain fields
+      let parsedOutput = typeof modelOutput === 'object' && modelOutput !== null ? modelOutput : {};
+      
+      // Handle case where AI returns queries array instead of flat object
+      if (parsedOutput.queries && Array.isArray(parsedOutput.queries) && parsedOutput.queries.length > 0) {
+        parsedOutput = parsedOutput.queries[0];
+      }
+      
+      // Handle case where AI returns recentMessages array instead of flat object
+      if (parsedOutput.recentMessages && Array.isArray(parsedOutput.recentMessages) && parsedOutput.recentMessages.length > 0) {
+        parsedOutput = parsedOutput.recentMessages[0];
+      }
+      
+      // Handle case where AI returns blockchain-keyed object with address arrays
+      const blockchainKeys = ['eth', 'bsc', 'polygon', 'arbitrum', 'avalanche', 'optimism', 'base', 'fantom', 'linea'];
+      for (const blockchain of blockchainKeys) {
+        if (parsedOutput[blockchain] && Array.isArray(parsedOutput[blockchain]) && parsedOutput[blockchain].length > 0) {
+          const address = parsedOutput[blockchain][0];
+          parsedOutput = {
+            blockchain: blockchain,
+            walletAddress: address,
+            contractAddress: address,
+            address: address
+          };
+          break;
+        }
+      }
+      
+      // Map common AI field variations to expected schema fields
+      if (parsedOutput.address && !parsedOutput.walletAddress && !parsedOutput.contractAddress) {
+        // If we see 'address' without specific wallet/contract context, try to determine which one
+        const addressPattern = /0x[a-fA-F0-9]{40}/;
+        if (addressPattern.test(parsedOutput.address)) {
+          // For actions that expect walletAddress
+          if (!parsedOutput.walletAddress) parsedOutput.walletAddress = parsedOutput.address;
+          // For actions that expect contractAddress  
+          if (!parsedOutput.contractAddress) parsedOutput.contractAddress = parsedOutput.address;
+        }
+      }
+      
+      // Handle underscore variations
+      if (parsedOutput.wallet_address && !parsedOutput.walletAddress) {
+        parsedOutput.walletAddress = parsedOutput.wallet_address;
+      }
+      if (parsedOutput.contract_address && !parsedOutput.contractAddress) {
+        parsedOutput.contractAddress = parsedOutput.contract_address;
+      }
+      
+      const request = schema.parse(parsedOutput);
 
-      const content = await generateObject({
-        schema,
-        context,
-        modelClass: ModelClass.SMALL,
-        runtime,
-      });
-
-      const request = content.object;
       elizaLogger.info(`[${methodName}] extracted request parameters`, {
         request,
       });

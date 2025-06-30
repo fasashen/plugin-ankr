@@ -1573,11 +1573,19 @@ ${statusTable.toString()}
 var ankrPlugin = {
   name: "plugin-ankr",
   description: "Ankr Plugin for web3",
+  config: {
+    ANKR_API_KEY: {
+      type: "string",
+      minLength: 1,
+      description: "ANKR_API_KEY is required"
+    }
+  },
   actions,
   evaluators: []
 };
 var index_default = ankrPlugin;
 export {
+  actions,
   ankrPlugin,
   index_default as default
 };

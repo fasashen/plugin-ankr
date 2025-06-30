@@ -1,16 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
-import { Action, IAgentRuntime, Memory, ActionExample } from "@elizaos/core";
 import {
   AnkrProvider,
   Blockchain,
   GetNFTMetadataReply,
 } from "@ankr.com/ankr.js";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 // ------------------------------------------------------------------------------------------------
 // Types and Schemas
@@ -125,11 +125,11 @@ export const actionGetNFTMetadata: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the metadata for NFT token 1234 at contract 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d on eth",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

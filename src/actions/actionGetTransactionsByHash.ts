@@ -165,11 +165,11 @@ export const actionGetTransactionsByHash: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me transaction 0x5a4bf6970980a9381e6d6c78d96ab278035bbff58c383ffe96a0a2bbc7c02a4c on eth",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

@@ -102,7 +102,7 @@ export const actionGetBlockchainStats: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the stats for the Ethereum blockchain",
         },

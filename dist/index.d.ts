@@ -1,5 +1,5 @@
-import { Plugin } from '@elizaos/core';
-
+import { Plugin } from "@elizaos/core";
+declare const actions: import("@elizaos/core").Action[];
 declare const ankrPlugin: Plugin;
-
-export { ankrPlugin, ankrPlugin as default };
+export { actions, ankrPlugin };
+export default ankrPlugin;

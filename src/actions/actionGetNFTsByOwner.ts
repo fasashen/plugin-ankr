@@ -6,7 +6,7 @@ import {
   Blockchain,
   GetNFTsByOwnerReply,
 } from "@ankr.com/ankr.js";
-import { Action, ActionExample, IAgentRuntime, Memory } from "@elizaos/core";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
@@ -115,11 +115,11 @@ export const actionGetNFTsByOwner: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the NFTs owned by 0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

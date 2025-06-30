@@ -1,17 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
-import { Action, IAgentRuntime, Memory, ActionExample } from "@elizaos/core";
 import {
   AnkrProvider,
   Blockchain,
-  GetTransactionsByAddressReply,
-  GetTransactionsByAddressRequest,
+  GetTransactionsByAddressReply
 } from "@ankr.com/ankr.js";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 // ------------------------------------------------------------------------------------------------
 // Types and Schemas
@@ -126,11 +125,11 @@ export const actionGetTransactionsByAddress: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the latest transactions for address 0xd8da6bf26964af9d7eed9e03e53415d37aa96045 on eth",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

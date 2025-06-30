@@ -1,17 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
-import { Action, IAgentRuntime, Memory, ActionExample } from "@elizaos/core";
 import {
   AnkrProvider,
   Blockchain,
-  GetTokenHoldersReply,
-  GetTokenHoldersRequest as AnkrGetTokenHoldersRequest,
+  GetTokenHoldersReply
 } from "@ankr.com/ankr.js";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 // ------------------------------------------------------------------------------------------------
 // Types and Schemas
@@ -92,11 +91,11 @@ export const actionGetTokenHolders: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me holders for contract 0xf307910A4c7bbc79691fD374889b36d8531B08e3 on bsc",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

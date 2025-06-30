@@ -6,11 +6,11 @@ import {
   Blockchain,
   GetCurrenciesReply,
 } from "@ankr.com/ankr.js";
-import { Action, ActionExample, IAgentRuntime, Memory } from "@elizaos/core";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 // ------------------------------------------------------------------------------------------------
 // Types and Schemas
@@ -106,11 +106,11 @@ export const actionGetCurrencies: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "Show me the top currencies on Ethereum",
         },
-      } as ActionExample,
+      },
     ],
   ],
   validate: async (

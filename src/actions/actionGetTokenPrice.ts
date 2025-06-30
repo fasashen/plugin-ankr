@@ -1,16 +1,16 @@
 // ------------------------------------------------------------------------------------------------
 // Essential Imports
 // ------------------------------------------------------------------------------------------------
-import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import {
   AnkrProvider,
-  GetTokenPriceReply,
   Blockchain,
+  GetTokenPriceReply,
 } from "@ankr.com/ankr.js";
+import { Action, IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
-import { ValidationError } from "../error/base";
 import { Blockchains } from "../ankr/blockchains";
 import { createAnkrHandler } from "../ankr/handlerFactory";
+import { ValidationError } from "../error/base";
 
 /**
  * Schema for token price requests
@@ -18,7 +18,8 @@ import { createAnkrHandler } from "../ankr/handlerFactory";
 export const getTokenPriceRequestSchema = z.object({
   blockchain: z
     .nativeEnum(Blockchains)
-    .describe("The blockchain to check the token price on"),
+    .default(Blockchains.ETH)
+    .describe("The blockchain to check the token price on. Defaults to 'eth' for Ethereum if not specified. When user asks about ETH, BTC, or other native tokens, use 'eth' for Ethereum."),
   contractAddress: z
     .string()
     .refine((val) => !val || val.startsWith("0x"), {
@@ -92,7 +93,7 @@ export const actionGetTokenPrice: Action = {
   examples: [
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "What's the current price of ETH?",
         },
@@ -100,7 +101,7 @@ export const actionGetTokenPrice: Action = {
     ],
     [
       {
-        user: "user",
+        name: "user",
         content: {
           text: "What's the current price of 0x8290333cef9e6d528dd5618fb97a76f268f3edd4 token on eth?",
         },
